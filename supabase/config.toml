@@ -1,1 +1,4 @@
 project_id = "pvgcgahttrokmuvahlay"
+
+[functions.send-cold-emails]
+verify_jwt = true
