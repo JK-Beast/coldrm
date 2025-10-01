@@ -39,7 +39,7 @@ const Index = () => {
                 size="lg" 
                 variant="outline"
                 onClick={() => navigate("/auth")}
-                className="border-white text-white hover:bg-white/10 text-lg px-8 py-6"
+                className="border-white/50 bg-white/10 text-white hover:bg-white/20 hover:text-white backdrop-blur-sm text-lg px-8 py-6"
               >
                 Sign In
               </Button>
