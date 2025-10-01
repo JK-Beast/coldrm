@@ -21,10 +21,10 @@ serve(async (req) => {
       );
     }
 
-    const cohereApiKey = Deno.env.get('COHERE_API_KEY');
-    if (!cohereApiKey) {
+    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
+    if (!lovableApiKey) {
       return new Response(
-        JSON.stringify({ error: "Cohere API key not configured" }),
+        JSON.stringify({ error: "AI service not configured" }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -54,31 +54,40 @@ serve(async (req) => {
 
     console.log(`Processing email campaign for user: ${user.email}`);
 
-    // Generate AI content using Cohere Chat API
-    const cohereResponse = await fetch('https://api.cohere.ai/v1/chat', {
+    // Generate AI content using Lovable AI Gateway
+    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${cohereApiKey}`,
+        'Authorization': `Bearer ${lovableApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'command',
-        message: `Write a professional, friendly cold email based on this request: ${prompt}\n\nThe email should:\n- Sound natural and human-written\n- Be concise and personalized\n- Include a clear call-to-action\n- Not be too salesy\n- Be warm and approachable\n\nProvide only the email content, no additional commentary.`,
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a professional email writer. Write natural, human-sounding cold emails that are concise, warm, and personalized with clear calls-to-action. Avoid being too salesy.'
+          },
+          {
+            role: 'user',
+            content: `Write a professional cold email based on this request: ${prompt}\n\nProvide only the email content, no additional commentary.`
+          }
+        ],
         temperature: 0.8,
       }),
     });
 
-    if (!cohereResponse.ok) {
-      const errorText = await cohereResponse.text();
-      console.error('Cohere API error:', errorText);
+    if (!aiResponse.ok) {
+      const errorText = await aiResponse.text();
+      console.error('AI Gateway error:', errorText);
       return new Response(
         JSON.stringify({ error: "Failed to generate email content" }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const cohereData = await cohereResponse.json();
-    const generatedContent = cohereData.text?.trim() || '';
+    const aiData = await aiResponse.json();
+    const generatedContent = aiData.choices?.[0]?.message?.content?.trim() || '';
 
     console.log('Generated email content length:', generatedContent.length);
 
