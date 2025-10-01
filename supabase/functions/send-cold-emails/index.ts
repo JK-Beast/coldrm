@@ -54,8 +54,8 @@ serve(async (req) => {
 
     console.log(`Processing email campaign for user: ${user.email}`);
 
-    // Generate AI content using Cohere
-    const cohereResponse = await fetch('https://api.cohere.ai/v1/generate', {
+    // Generate AI content using Cohere Chat API
+    const cohereResponse = await fetch('https://api.cohere.ai/v1/chat', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${cohereApiKey}`,
@@ -63,10 +63,8 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         model: 'command',
-        prompt: `Write a professional, friendly cold email based on this request: ${prompt}\n\nThe email should:\n- Sound natural and human-written\n- Be concise and personalized\n- Include a clear call-to-action\n- Not be too salesy\n- Be warm and approachable\n\nEmail content:`,
-        max_tokens: 500,
+        message: `Write a professional, friendly cold email based on this request: ${prompt}\n\nThe email should:\n- Sound natural and human-written\n- Be concise and personalized\n- Include a clear call-to-action\n- Not be too salesy\n- Be warm and approachable\n\nProvide only the email content, no additional commentary.`,
         temperature: 0.8,
-        stop_sequences: [],
       }),
     });
 
@@ -80,7 +78,7 @@ serve(async (req) => {
     }
 
     const cohereData = await cohereResponse.json();
-    const generatedContent = cohereData.generations[0]?.text?.trim() || '';
+    const generatedContent = cohereData.text?.trim() || '';
 
     console.log('Generated email content length:', generatedContent.length);
 

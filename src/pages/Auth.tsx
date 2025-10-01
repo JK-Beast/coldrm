@@ -51,9 +51,8 @@ const Auth = () => {
         
         toast({
           title: "Account created!",
-          description: "Welcome to COLDrm.",
+          description: "Please check your email and verify your account before logging in.",
         });
-        navigate("/dashboard");
       }
     } catch (error: any) {
       toast({
