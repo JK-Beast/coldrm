@@ -111,9 +111,9 @@ serve(async (req) => {
       const recipient = recipients[i];
       
       try {
-        // Send email via Resend using the logged-in user's email
+        // Send email via Resend
         const emailResult = await resend.emails.send({
-          from: user.email || 'noreply@yourdomain.com',
+          from: 'onboarding@resend.dev',
           to: [recipient],
           subject: subject,
           html: emailWithCTA.replace(/\n/g, '<br>'),
