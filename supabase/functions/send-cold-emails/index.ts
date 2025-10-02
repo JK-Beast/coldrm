@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { Resend } from "https://esm.sh/resend@4.0.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -28,6 +29,16 @@ serve(async (req) => {
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    const resendApiKey = Deno.env.get('RESEND_API_KEY');
+    if (!resendApiKey) {
+      return new Response(
+        JSON.stringify({ error: "Email service not configured. Please add RESEND_API_KEY." }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const resend = new Resend(resendApiKey);
 
     // Get the authenticated user
     const authHeader = req.headers.get('Authorization');
@@ -100,6 +111,16 @@ serve(async (req) => {
       const recipient = recipients[i];
       
       try {
+        // Send email via Resend using the logged-in user's email
+        const emailResult = await resend.emails.send({
+          from: user.email || 'noreply@yourdomain.com',
+          to: [recipient],
+          subject: subject,
+          html: emailWithCTA.replace(/\n/g, '<br>'),
+        });
+
+        console.log(`Email sent to ${recipient}:`, emailResult);
+
         // Store campaign in database
         const { error: insertError } = await supabase
           .from('email_campaigns')
@@ -114,11 +135,9 @@ serve(async (req) => {
 
         if (insertError) {
           console.error('Error storing campaign:', insertError);
-          results.push({ email: recipient, status: 'failed', error: insertError.message });
-        } else {
-          console.log(`Campaign stored for: ${recipient}`);
-          results.push({ email: recipient, status: 'sent' });
         }
+
+        results.push({ email: recipient, status: 'sent', messageId: emailResult.data?.id });
 
         // Wait 1 minute before next email (except for the last one)
         if (i < recipients.length - 1) {
@@ -127,6 +146,19 @@ serve(async (req) => {
         }
       } catch (error: any) {
         console.error(`Error processing ${recipient}:`, error);
+        
+        // Store failed campaign
+        await supabase
+          .from('email_campaigns')
+          .insert({
+            user_id: user.id,
+            subject: subject,
+            content: emailWithCTA,
+            recipient_email: recipient,
+            status: 'failed',
+            sent_at: new Date().toISOString(),
+          });
+
         results.push({ email: recipient, status: 'failed', error: error.message });
       }
     }
