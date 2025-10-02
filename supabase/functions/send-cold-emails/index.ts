@@ -102,9 +102,6 @@ serve(async (req) => {
 
     console.log('Generated email content length:', generatedContent.length);
 
-    // Add CTA button to the email
-    const emailWithCTA = `${generatedContent}\n\n---\n\nInterested? Click here to connect: ${supabaseUrl}/add-contact?email=${encodeURIComponent(user.email || '')}`;
-
     // Process each recipient with 1-minute delay
     const results = [];
     for (let i = 0; i < recipients.length; i++) {
@@ -116,7 +113,7 @@ serve(async (req) => {
           from: 'onboarding@resend.dev',
           to: [recipient],
           subject: subject,
-          html: emailWithCTA.replace(/\n/g, '<br>'),
+          html: generatedContent.replace(/\n/g, '<br>'),
         });
 
         console.log(`Email sent to ${recipient}:`, emailResult);
@@ -127,7 +124,7 @@ serve(async (req) => {
           .insert({
             user_id: user.id,
             subject: subject,
-            content: emailWithCTA,
+            content: generatedContent,
             recipient_email: recipient,
             status: 'sent',
             sent_at: new Date().toISOString(),
@@ -153,7 +150,7 @@ serve(async (req) => {
           .insert({
             user_id: user.id,
             subject: subject,
-            content: emailWithCTA,
+            content: generatedContent,
             recipient_email: recipient,
             status: 'failed',
             sent_at: new Date().toISOString(),
