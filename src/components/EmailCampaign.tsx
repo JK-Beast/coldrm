@@ -26,11 +26,20 @@ const EmailCampaign = () => {
 
   const checkSmtpSetup = async () => {
     try {
+      console.log("Checking SMTP setup...");
       const { data, error } = await supabase.functions.invoke("check-smtp-setup");
-      if (error) throw error;
-      setSmtpConfigured(data.configured);
+      console.log("SMTP check response:", { data, error });
+      
+      if (error) {
+        console.error("SMTP check error:", error);
+        throw error;
+      }
+      
+      setSmtpConfigured(data?.configured || false);
+      console.log("SMTP configured:", data?.configured);
     } catch (error: any) {
       console.error("Error checking SMTP setup:", error);
+      setSmtpConfigured(false);
     }
   };
 
