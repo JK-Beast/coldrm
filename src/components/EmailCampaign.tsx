@@ -14,13 +14,25 @@ const EmailCampaign = () => {
   const [recipients, setRecipients] = useState("");
   const [sending, setSending] = useState(false);
   const [sentCount, setSentCount] = useState(0);
+  const [smtpConfigured, setSmtpConfigured] = useState(false);
   const { toast } = useToast();
 
   const MAX_EMAILS = 20;
 
   useEffect(() => {
     fetchSentCount();
+    checkSmtpSetup();
   }, []);
+
+  const checkSmtpSetup = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke("check-smtp-setup");
+      if (error) throw error;
+      setSmtpConfigured(data.configured);
+    } catch (error: any) {
+      console.error("Error checking SMTP setup:", error);
+    }
+  };
 
   const fetchSentCount = async () => {
     try {
@@ -38,6 +50,15 @@ const EmailCampaign = () => {
 
   const handleSendCampaign = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!smtpConfigured) {
+      toast({
+        variant: "destructive",
+        title: "SMTP Not Configured",
+        description: "Please configure your Gmail SMTP settings in the dashboard first.",
+      });
+      return;
+    }
     
     const recipientList = recipients.split(",").map(email => email.trim()).filter(Boolean);
     
@@ -144,19 +165,30 @@ const EmailCampaign = () => {
               />
             </div>
 
+            {!smtpConfigured && (
+              <div className="bg-destructive/10 border border-destructive/20 p-4 rounded-lg">
+                <p className="text-sm text-destructive font-medium">
+                  ⚠️ SMTP Not Configured
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Please configure your Gmail SMTP settings using the "SMTP Settings" button in the top right corner before sending emails.
+                </p>
+              </div>
+            )}
+
             <div className="bg-secondary/50 p-4 rounded-lg space-y-2">
               <h4 className="font-medium text-sm">Campaign Features:</h4>
               <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
-                <li>AI-generated human-like content using Cohere</li>
+                <li>AI-generated human-like content</li>
+                <li>Sent directly from your Gmail account</li>
                 <li>1-minute delay between each email</li>
-                <li>CTA button for easy contact addition</li>
-                <li>Spam filter optimization</li>
+                <li>Secure SMTP with encryption</li>
               </ul>
             </div>
 
             <Button 
               type="submit" 
-              disabled={sending || sentCount >= MAX_EMAILS}
+              disabled={sending || sentCount >= MAX_EMAILS || !smtpConfigured}
               className="w-full"
             >
               {sending ? (

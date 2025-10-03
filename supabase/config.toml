@@ -2,3 +2,12 @@ project_id = "pvgcgahttrokmuvahlay"
 
 [functions.send-cold-emails]
 verify_jwt = true
+
+[functions.save-smtp-credentials]
+verify_jwt = true
+
+[functions.delete-smtp-credentials]
+verify_jwt = true
+
+[functions.check-smtp-setup]
+verify_jwt = true

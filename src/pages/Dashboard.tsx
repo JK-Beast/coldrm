@@ -3,15 +3,17 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
-import { LogOut, Users, Mail } from "lucide-react";
+import { LogOut, Users, Mail, Settings } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import ContactsList from "@/components/ContactsList";
 import EmailCampaign from "@/components/EmailCampaign";
+import SMTPSettings from "@/components/SMTPSettings";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Dashboard = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [smtpSettingsOpen, setSmtpSettingsOpen] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -68,6 +70,14 @@ const Dashboard = () => {
             </h1>
             <div className="flex items-center gap-4">
               <span className="text-sm text-muted-foreground">{user?.email}</span>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setSmtpSettingsOpen(true)}
+              >
+                <Settings className="h-4 w-4 mr-2" />
+                SMTP Settings
+              </Button>
               <Button variant="outline" size="sm" onClick={handleLogout}>
                 <LogOut className="h-4 w-4 mr-2" />
                 Logout
@@ -100,6 +110,11 @@ const Dashboard = () => {
           </TabsContent>
         </Tabs>
       </main>
+
+      <SMTPSettings 
+        open={smtpSettingsOpen} 
+        onOpenChange={setSmtpSettingsOpen} 
+      />
     </div>
   );
 };

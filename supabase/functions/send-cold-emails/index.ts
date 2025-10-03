@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { Resend } from "https://esm.sh/resend@4.0.0";
+import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -30,16 +30,6 @@ serve(async (req) => {
       );
     }
 
-    const resendApiKey = Deno.env.get('RESEND_API_KEY');
-    if (!resendApiKey) {
-      return new Response(
-        JSON.stringify({ error: "Email service not configured. Please add RESEND_API_KEY." }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const resend = new Resend(resendApiKey);
-
     // Get the authenticated user
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
@@ -64,6 +54,46 @@ serve(async (req) => {
     }
 
     console.log(`Processing email campaign for user: ${user.email}`);
+
+    // Get SMTP credentials
+    const { data: smtpCreds, error: smtpError } = await supabase
+      .from('smtp_credentials')
+      .select('email, encrypted_password')
+      .eq('user_id', user.id)
+      .single();
+
+    if (smtpError || !smtpCreds) {
+      return new Response(
+        JSON.stringify({ error: "SMTP credentials not configured. Please add your Google App Password in settings." }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Decrypt password
+    function decryptPassword(encrypted: string): string {
+      const decoded = atob(encrypted);
+      const bytes = new Uint8Array(decoded.length);
+      for (let i = 0; i < decoded.length; i++) {
+        bytes[i] = decoded.charCodeAt(i);
+      }
+      const decoder = new TextDecoder();
+      return decoder.decode(bytes);
+    }
+
+    const smtpPassword = decryptPassword(smtpCreds.encrypted_password);
+
+    // Initialize SMTP client
+    const smtpClient = new SMTPClient({
+      connection: {
+        hostname: "smtp.gmail.com",
+        port: 587,
+        tls: true,
+        auth: {
+          username: smtpCreds.email,
+          password: smtpPassword,
+        },
+      },
+    });
 
     // Generate AI content using Lovable AI Gateway
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -108,15 +138,16 @@ serve(async (req) => {
       const recipient = recipients[i];
       
       try {
-        // Send email via Resend
-        const emailResult = await resend.emails.send({
-          from: 'onboarding@resend.dev',
-          to: [recipient],
+        // Send email via SMTP
+        await smtpClient.send({
+          from: smtpCreds.email,
+          to: recipient,
           subject: subject,
+          content: generatedContent,
           html: generatedContent.replace(/\n/g, '<br>'),
         });
 
-        console.log(`Email sent to ${recipient}:`, emailResult);
+        console.log(`Email sent to ${recipient} via SMTP`);
 
         // Store campaign in database
         const { error: insertError } = await supabase
@@ -134,7 +165,7 @@ serve(async (req) => {
           console.error('Error storing campaign:', insertError);
         }
 
-        results.push({ email: recipient, status: 'sent', messageId: emailResult.data?.id });
+        results.push({ email: recipient, status: 'sent' });
 
         // Wait 1 minute before next email (except for the last one)
         if (i < recipients.length - 1) {
