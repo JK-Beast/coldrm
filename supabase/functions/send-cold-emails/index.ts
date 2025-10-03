@@ -82,11 +82,11 @@ serve(async (req) => {
 
     const smtpPassword = decryptPassword(smtpCreds.encrypted_password);
 
-    // Initialize SMTP client
+    // Initialize SMTP client for Gmail
     const smtpClient = new SMTPClient({
       connection: {
         hostname: "smtp.gmail.com",
-        port: 587,
+        port: 465,
         tls: true,
         auth: {
           username: smtpCreds.email,
@@ -94,6 +94,8 @@ serve(async (req) => {
         },
       },
     });
+
+    console.log('SMTP client initialized for:', smtpCreds.email);
 
     // Generate AI content using Lovable AI Gateway
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -138,13 +140,31 @@ serve(async (req) => {
       const recipient = recipients[i];
       
       try {
+        // Format content properly for email
+        const htmlContent = generatedContent
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/\n\n/g, '</p><p>')
+          .replace(/\n/g, '<br>');
+        
+        const formattedHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+  <p>${htmlContent}</p>
+</body>
+</html>`;
+
         // Send email via SMTP
         await smtpClient.send({
           from: smtpCreds.email,
           to: recipient,
           subject: subject,
           content: generatedContent,
-          html: generatedContent.replace(/\n/g, '<br>'),
+          html: formattedHtml,
         });
 
         console.log(`Email sent to ${recipient} via SMTP`);
