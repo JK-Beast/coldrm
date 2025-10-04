@@ -61,6 +61,8 @@ const SMTPSettings = ({ open, onOpenChange }: SMTPSettingsProps) => {
       setEmail("");
       setAppPassword("");
       checkSetup();
+      // Notify other parts of the app that SMTP configuration changed
+      window.dispatchEvent(new CustomEvent('smtp-config-updated'));
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -91,6 +93,8 @@ const SMTPSettings = ({ open, onOpenChange }: SMTPSettingsProps) => {
 
       setConfigured(false);
       setConfiguredEmail("");
+      // Notify other parts of the app that SMTP configuration changed
+      window.dispatchEvent(new CustomEvent('smtp-config-updated'));
     } catch (error: any) {
       toast({
         variant: "destructive",

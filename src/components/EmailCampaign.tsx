@@ -22,6 +22,11 @@ const EmailCampaign = () => {
   useEffect(() => {
     fetchSentCount();
     checkSmtpSetup();
+
+    // Re-check SMTP setup whenever credentials are updated elsewhere
+    const handler = () => checkSmtpSetup();
+    window.addEventListener('smtp-config-updated', handler);
+    return () => window.removeEventListener('smtp-config-updated', handler);
   }, []);
 
   const checkSmtpSetup = async () => {
