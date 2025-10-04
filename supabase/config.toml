@@ -11,3 +11,6 @@ verify_jwt = true
 
 [functions.check-smtp-setup]
 verify_jwt = true
+
+[functions.send-feedback]
+verify_jwt = true

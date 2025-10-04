@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import ContactsList from "@/components/ContactsList";
 import EmailCampaign from "@/components/EmailCampaign";
 import SMTPSettings from "@/components/SMTPSettings";
+import { FeedbackButton } from "@/components/FeedbackButton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Dashboard = () => {
@@ -70,6 +71,7 @@ const Dashboard = () => {
             </h1>
             <div className="flex items-center gap-4">
               <span className="text-sm text-muted-foreground">{user?.email}</span>
+              <FeedbackButton />
               <Button 
                 variant="outline" 
                 size="sm" 
