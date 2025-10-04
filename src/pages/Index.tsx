@@ -11,18 +11,29 @@ const Index = () => {
       {/* Hero Section */}
       <section className="relative overflow-hidden" style={{
         background: "var(--gradient-hero)",
-        minHeight: "80vh"
+        minHeight: "90vh"
       }}>
-        <div className="container mx-auto px-4 py-20">
-          <div className="max-w-4xl mx-auto text-center space-y-8">
-            <div className="space-y-4">
-              <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-tight">
+        {/* Animated background elements */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-20 left-10 w-72 h-72 bg-primary/20 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-20 right-10 w-96 h-96 bg-accent/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }}></div>
+        </div>
+
+        <div className="container mx-auto px-4 py-24 relative z-10">
+          <div className="max-w-5xl mx-auto text-center space-y-12">
+            <div className="space-y-6 animate-fade-in">
+              <div className="inline-block px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full border border-white/20 text-white/90 text-sm font-medium mb-4">
+                🚀 MVP Version - Perfect for Getting Started
+              </div>
+              <h1 className="text-6xl md:text-7xl lg:text-8xl font-bold text-white leading-tight tracking-tight">
                 CRM + Cold Mail
                 <br />
-                <span className="text-white/90">Made Simple</span>
+                <span className="bg-gradient-to-r from-white to-white/70 bg-clip-text text-transparent">
+                  Made Simple
+                </span>
               </h1>
-              <p className="text-xl md:text-2xl text-white/80 max-w-2xl mx-auto">
-                The perfect tool for small business owners and freelancers. Manage contacts and send AI-powered cold emails that feel human.
+              <p className="text-xl md:text-2xl text-white/90 max-w-3xl mx-auto leading-relaxed">
+                The perfect tool for small business owners and freelancers. Manage contacts and send AI-powered cold emails that actually get responses.
               </p>
             </div>
 
@@ -30,33 +41,33 @@ const Index = () => {
               <Button 
                 size="lg" 
                 onClick={() => navigate("/auth")}
-                className="bg-white text-primary hover:bg-white/90 shadow-[var(--shadow-medium)] text-lg px-8 py-6"
+                className="bg-white text-primary hover:bg-white/90 hover:shadow-[var(--shadow-glow)] hover:scale-105 transition-all duration-300 text-lg px-10 py-7 font-semibold group"
               >
                 Get Started Free
-                <ArrowRight className="ml-2 h-5 w-5" />
+                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </Button>
               <Button 
                 size="lg" 
                 variant="outline"
                 onClick={() => navigate("/auth")}
-                className="border-white/50 bg-white/10 text-white hover:bg-white/20 hover:text-white backdrop-blur-sm text-lg px-8 py-6"
+                className="border-2 border-white/30 bg-white/5 text-white hover:bg-white/15 hover:border-white/50 backdrop-blur-md text-lg px-10 py-7 font-semibold"
               >
                 Sign In
               </Button>
             </div>
 
-            <div className="grid grid-cols-3 gap-8 max-w-2xl mx-auto mt-16">
-              <div className="text-center space-y-2">
-                <div className="text-4xl font-bold text-white">10</div>
-                <div className="text-white/70 text-sm">Contacts</div>
+            <div className="grid grid-cols-3 gap-8 max-w-3xl mx-auto mt-20">
+              <div className="text-center space-y-3 p-6 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 hover:bg-white/10 transition-all">
+                <div className="text-5xl font-bold text-white">10</div>
+                <div className="text-white/80 font-medium">Contacts</div>
               </div>
-              <div className="text-center space-y-2">
-                <div className="text-4xl font-bold text-white">20</div>
-                <div className="text-white/70 text-sm">Cold Emails</div>
+              <div className="text-center space-y-3 p-6 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 hover:bg-white/10 transition-all">
+                <div className="text-5xl font-bold text-white">20</div>
+                <div className="text-white/80 font-medium">Cold Emails</div>
               </div>
-              <div className="text-center space-y-2">
-                <div className="text-4xl font-bold text-white">∞</div>
-                <div className="text-white/70 text-sm">Possibilities</div>
+              <div className="text-center space-y-3 p-6 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 hover:bg-white/10 transition-all">
+                <div className="text-5xl font-bold text-white">∞</div>
+                <div className="text-white/80 font-medium">Possibilities</div>
               </div>
             </div>
           </div>
@@ -64,47 +75,49 @@ const Index = () => {
       </section>
 
       {/* Features Section */}
-      <section className="py-20 bg-background">
+      <section className="py-24 bg-background relative">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-16 space-y-4">
-            <h2 className="text-4xl font-bold">Everything you need</h2>
+          <div className="text-center mb-20 space-y-4 animate-fade-in">
+            <h2 className="text-5xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+              Everything you need
+            </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               A powerful combination of CRM and cold email tools designed for simplicity and results
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            <Card className="border-2 hover:border-primary transition-colors shadow-[var(--shadow-soft)]">
-              <CardContent className="pt-6 space-y-4">
-                <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Users className="h-6 w-6 text-primary" />
+          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            <Card className="border-2 border-border hover:border-primary hover:shadow-[var(--shadow-glow)] transition-all duration-300 group hover:scale-105 bg-gradient-to-br from-card to-card/50">
+              <CardContent className="pt-8 pb-8 space-y-6">
+                <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-[var(--shadow-soft)] group-hover:shadow-[var(--shadow-medium)] transition-all">
+                  <Users className="h-8 w-8 text-white" />
                 </div>
-                <h3 className="text-xl font-bold">Simple CRM</h3>
-                <p className="text-muted-foreground">
+                <h3 className="text-2xl font-bold">Simple CRM</h3>
+                <p className="text-muted-foreground leading-relaxed">
                   Manage up to 10 contacts. Add them manually or automatically from email responses.
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="border-2 hover:border-primary transition-colors shadow-[var(--shadow-soft)]">
-              <CardContent className="pt-6 space-y-4">
-                <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Zap className="h-6 w-6 text-primary" />
+            <Card className="border-2 border-border hover:border-primary hover:shadow-[var(--shadow-glow)] transition-all duration-300 group hover:scale-105 bg-gradient-to-br from-card to-card/50">
+              <CardContent className="pt-8 pb-8 space-y-6">
+                <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-[var(--shadow-soft)] group-hover:shadow-[var(--shadow-medium)] transition-all">
+                  <Zap className="h-8 w-8 text-white" />
                 </div>
-                <h3 className="text-xl font-bold">AI-Powered Emails</h3>
-                <p className="text-muted-foreground">
+                <h3 className="text-2xl font-bold">AI-Powered Emails</h3>
+                <p className="text-muted-foreground leading-relaxed">
                   Generate human-like cold emails with Cohere AI. Warm sending to avoid spam filters.
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="border-2 hover:border-primary transition-colors shadow-[var(--shadow-soft)]">
-              <CardContent className="pt-6 space-y-4">
-                <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Mail className="h-6 w-6 text-primary" />
+            <Card className="border-2 border-border hover:border-primary hover:shadow-[var(--shadow-glow)] transition-all duration-300 group hover:scale-105 bg-gradient-to-br from-card to-card/50">
+              <CardContent className="pt-8 pb-8 space-y-6">
+                <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-[var(--shadow-soft)] group-hover:shadow-[var(--shadow-medium)] transition-all">
+                  <Mail className="h-8 w-8 text-white" />
                 </div>
-                <h3 className="text-xl font-bold">Smart Campaigns</h3>
-                <p className="text-muted-foreground">
+                <h3 className="text-2xl font-bold">Smart Campaigns</h3>
+                <p className="text-muted-foreground leading-relaxed">
                   Send up to 20 emails with 1-minute delays. Track responses with built-in CTA buttons.
                 </p>
               </CardContent>
@@ -144,27 +157,40 @@ const Index = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-background">
-        <div className="container mx-auto px-4">
-          <Card className="max-w-3xl mx-auto border-2 border-primary shadow-[var(--shadow-medium)]">
-            <CardContent className="p-12 text-center space-y-6">
-              <h2 className="text-3xl md:text-4xl font-bold">
+      <section className="py-24 bg-background relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none"></div>
+        <div className="container mx-auto px-4 relative z-10">
+          <Card className="max-w-4xl mx-auto border-2 border-primary shadow-[var(--shadow-glow)] overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-accent/10 pointer-events-none"></div>
+            <CardContent className="p-16 text-center space-y-8 relative z-10">
+              <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent leading-tight">
                 Ready to grow your business?
               </h2>
-              <p className="text-xl text-muted-foreground">
-                Start managing contacts and sending cold emails today
+              <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto">
+                Start managing contacts and sending cold emails today. No credit card required.
               </p>
               <Button 
                 size="lg"
                 onClick={() => navigate("/auth")}
-                className="text-lg px-8 py-6"
+                className="text-lg px-12 py-8 shadow-[var(--shadow-medium)] hover:shadow-[var(--shadow-glow)] hover:scale-105 transition-all duration-300 group font-semibold"
               >
                 Create Free Account
-                <ArrowRight className="ml-2 h-5 w-5" />
+                <ArrowRight className="ml-2 h-6 w-6 group-hover:translate-x-1 transition-transform" />
               </Button>
-              <p className="text-sm text-muted-foreground">
-                MVP version • 10 contacts • 20 emails
-              </p>
+              <div className="flex items-center justify-center gap-8 pt-4">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <CheckCircle2 className="h-4 w-4 text-primary" />
+                  10 contacts
+                </div>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <CheckCircle2 className="h-4 w-4 text-primary" />
+                  20 emails
+                </div>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <CheckCircle2 className="h-4 w-4 text-primary" />
+                  AI-powered
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>
