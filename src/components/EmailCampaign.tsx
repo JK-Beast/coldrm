@@ -69,13 +69,20 @@ const EmailCampaign = () => {
       return;
     }
     
-    const recipientList = recipients.split(",").map(email => email.trim()).filter(Boolean);
+    // Parse format: "email,name,company;email,name,company"
+    const recipientList = recipients
+      .split(";")
+      .map(entry => {
+        const [email, name, company] = entry.split(",").map(s => s.trim());
+        return { email, name: name || "", company: company || "" };
+      })
+      .filter(r => r.email);
     
     if (recipientList.length === 0) {
       toast({
         variant: "destructive",
         title: "No recipients",
-        description: "Please enter at least one email address.",
+        description: "Please enter at least one recipient in format: email,name,company",
       });
       return;
     }
@@ -162,16 +169,19 @@ const EmailCampaign = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="recipients">Recipients (comma-separated)</Label>
+              <Label htmlFor="recipients">Recipients</Label>
               <Textarea
                 id="recipients"
-                placeholder="john@example.com, jane@example.com, bob@example.com"
+                placeholder="john@company.com,John,Company Inc;jane@business.com,Jane,Business Co"
                 value={recipients}
                 onChange={(e) => setRecipients(e.target.value)}
                 rows={3}
                 required
                 disabled={sending}
               />
+              <p className="text-xs text-muted-foreground">
+                Format: email,name,company;email,name,company
+              </p>
             </div>
 
             {!smtpConfigured && (

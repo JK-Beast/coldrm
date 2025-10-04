@@ -22,6 +22,16 @@ serve(async (req) => {
       );
     }
 
+    // Validate recipient format
+    for (const recipient of recipients) {
+      if (!recipient.email || typeof recipient.email !== 'string') {
+        return new Response(
+          JSON.stringify({ error: "Invalid recipient format" }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
     const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
     if (!lovableApiKey) {
       return new Response(
@@ -97,49 +107,44 @@ serve(async (req) => {
 
     console.log('SMTP client initialized for:', smtpCreds.email);
 
-    // Generate AI content using Lovable AI Gateway
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${lovableApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a professional email writer. Write natural, human-sounding cold emails that are concise, warm, and personalized with clear calls-to-action. Avoid being too salesy.'
-          },
-          {
-            role: 'user',
-            content: `Write a professional cold email based on this request: ${prompt}\n\nProvide only the email content, no additional commentary.`
-          }
-        ],
-        temperature: 0.8,
-      }),
-    });
-
-    if (!aiResponse.ok) {
-      const errorText = await aiResponse.text();
-      console.error('AI Gateway error:', errorText);
-      return new Response(
-        JSON.stringify({ error: "Failed to generate email content" }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const aiData = await aiResponse.json();
-    const generatedContent = aiData.choices?.[0]?.message?.content?.trim() || '';
-
-    console.log('Generated email content length:', generatedContent.length);
-
-    // Process each recipient with 1-minute delay
+    // Process each recipient with personalized content
     const results = [];
+
     for (let i = 0; i < recipients.length; i++) {
       const recipient = recipients[i];
       
       try {
+        // Generate personalized AI content for each recipient
+        const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${lovableApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'google/gemini-2.5-flash',
+            messages: [
+              {
+                role: 'system',
+                content: 'You are a friendly person writing simple, casual emails. Keep it brief, warm, and conversational like you are texting a friend. No corporate jargon. Use simple language.'
+              },
+              {
+                role: 'user',
+                content: `Write a simple, casual email to ${recipient.name || 'someone'}${recipient.company ? ` at ${recipient.company}` : ''}. ${prompt}\n\nKeep it short, friendly, and natural. No fancy formatting. Just write like a real person.`
+              }
+            ],
+            temperature: 0.9,
+          }),
+        });
+
+        if (!aiResponse.ok) {
+          throw new Error('Failed to generate email content');
+        }
+
+        const aiData = await aiResponse.json();
+        const generatedContent = aiData.choices?.[0]?.message?.content?.trim() || '';
+
+        console.log(`Generated email for ${recipient.email}, length:`, generatedContent.length);
         // Format content properly for email
         const htmlContent = generatedContent
           .replace(/&/g, '&amp;')
@@ -161,13 +166,13 @@ serve(async (req) => {
         // Send email via SMTP
         await smtpClient.send({
           from: smtpCreds.email,
-          to: recipient,
+          to: recipient.email,
           subject: subject,
           content: generatedContent,
           html: formattedHtml,
         });
 
-        console.log(`Email sent to ${recipient} via SMTP`);
+        console.log(`Email sent to ${recipient.email} via SMTP`);
 
         // Store campaign in database
         const { error: insertError } = await supabase
@@ -176,7 +181,7 @@ serve(async (req) => {
             user_id: user.id,
             subject: subject,
             content: generatedContent,
-            recipient_email: recipient,
+            recipient_email: recipient.email,
             status: 'sent',
             sent_at: new Date().toISOString(),
           });
@@ -185,7 +190,7 @@ serve(async (req) => {
           console.error('Error storing campaign:', insertError);
         }
 
-        results.push({ email: recipient, status: 'sent' });
+        results.push({ email: recipient.email, status: 'sent' });
 
         // Wait 1 minute before next email (except for the last one)
         if (i < recipients.length - 1) {
@@ -193,7 +198,7 @@ serve(async (req) => {
           await new Promise(resolve => setTimeout(resolve, 60000));
         }
       } catch (error: any) {
-        console.error(`Error processing ${recipient}:`, error);
+        console.error(`Error processing ${recipient.email}:`, error);
         
         // Store failed campaign
         await supabase
@@ -201,13 +206,13 @@ serve(async (req) => {
           .insert({
             user_id: user.id,
             subject: subject,
-            content: generatedContent,
-            recipient_email: recipient,
+            content: '',
+            recipient_email: recipient.email,
             status: 'failed',
             sent_at: new Date().toISOString(),
           });
 
-        results.push({ email: recipient, status: 'failed', error: error.message });
+        results.push({ email: recipient.email, status: 'failed', error: error.message });
       }
     }
 
