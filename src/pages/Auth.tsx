@@ -13,6 +13,7 @@ const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [company, setCompany] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -42,6 +43,7 @@ const Auth = () => {
           options: {
             data: {
               full_name: fullName,
+              company: company,
             },
             emailRedirectTo: `${window.location.origin}/dashboard`,
           },
@@ -83,20 +85,36 @@ const Auth = () => {
         <CardContent>
           <form onSubmit={handleAuth} className="space-y-4">
             {!isLogin && (
-              <div className="space-y-2">
-                <Label htmlFor="fullName">Full Name</Label>
-                <div className="relative">
-                  <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="fullName"
-                    placeholder="John Doe"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    className="pl-10"
-                    required
-                  />
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="fullName">Full Name</Label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="fullName"
+                      placeholder="John Doe"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      className="pl-10"
+                      required
+                    />
+                  </div>
                 </div>
-              </div>
+                <div className="space-y-2">
+                  <Label htmlFor="company">Company</Label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="company"
+                      placeholder="Company Inc"
+                      value={company}
+                      onChange={(e) => setCompany(e.target.value)}
+                      className="pl-10"
+                      required
+                    />
+                  </div>
+                </div>
+              </>
             )}
             
             <div className="space-y-2">
