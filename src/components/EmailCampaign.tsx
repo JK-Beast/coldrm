@@ -7,6 +7,23 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Send, Loader2, Mail } from "lucide-react";
+import { z } from "zod";
+
+const campaignSchema = z.object({
+  subject: z.string()
+    .trim()
+    .min(1, "Subject is required")
+    .max(200, "Subject must be less than 200 characters"),
+  prompt: z.string()
+    .trim()
+    .min(10, "Prompt must be at least 10 characters")
+    .max(2000, "Prompt must be less than 2000 characters"),
+  recipients: z.string()
+    .trim()
+    .min(1, "At least one recipient is required"),
+});
+
+const emailSchema = z.string().email("Invalid email format");
 
 const EmailCampaign = () => {
   const [subject, setSubject] = useState("");
@@ -65,6 +82,20 @@ const EmailCampaign = () => {
   const handleSendCampaign = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Validate inputs
+    try {
+      campaignSchema.parse({ subject, prompt, recipients });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        toast({
+          variant: "destructive",
+          title: "Validation Error",
+          description: error.issues[0].message,
+        });
+        return;
+      }
+    }
+
     if (!smtpConfigured) {
       toast({
         variant: "destructive",
@@ -82,6 +113,20 @@ const EmailCampaign = () => {
         return { email, name: name || "", company: company || "" };
       })
       .filter(r => r.email);
+    
+    // Validate each email
+    for (const recipient of recipientList) {
+      try {
+        emailSchema.parse(recipient.email);
+      } catch {
+        toast({
+          variant: "destructive",
+          title: "Invalid Email",
+          description: `"${recipient.email}" is not a valid email address`,
+        });
+        return;
+      }
+    }
     
     if (recipientList.length === 0) {
       toast({

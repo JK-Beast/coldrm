@@ -10,6 +10,27 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { z } from "zod";
+
+const contactSchema = z.object({
+  name: z.string()
+    .trim()
+    .min(1, "Name is required")
+    .max(100, "Name must be less than 100 characters"),
+  email: z.string()
+    .trim()
+    .email("Invalid email address")
+    .max(255, "Email must be less than 255 characters"),
+  phone: z.string()
+    .max(50, "Phone must be less than 50 characters")
+    .optional(),
+  company: z.string()
+    .max(200, "Company must be less than 200 characters")
+    .optional(),
+  notes: z.string()
+    .max(1000, "Notes must be less than 1000 characters")
+    .optional(),
+});
 
 interface Contact {
   id: string;
@@ -103,6 +124,26 @@ const ContactsList = () => {
 
   const handleAddContact = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate inputs
+    try {
+      contactSchema.parse({
+        name,
+        email,
+        phone: phone || undefined,
+        company: company || undefined,
+        notes: notes || undefined,
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        toast({
+          variant: "destructive",
+          title: "Validation Error",
+          description: error.issues[0].message,
+        });
+        return;
+      }
+    }
     
     if (contacts.length >= MAX_CONTACTS) {
       toast({
