@@ -65,6 +65,20 @@ serve(async (req) => {
 
     console.log(`Processing email campaign for user: ${user.email}`);
 
+    // Get user profile for signature
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('full_name, company')
+      .eq('id', user.id)
+      .single();
+
+    if (profileError || !profile) {
+      console.error('Profile fetch error:', profileError);
+    }
+
+    const senderName = profile?.full_name || user.email?.split('@')[0] || 'Sender';
+    const senderCompany = profile?.company || '';
+
     // Get SMTP credentials
     const { data: smtpCreds, error: smtpError } = await supabase
       .from('smtp_credentials')
@@ -130,7 +144,7 @@ serve(async (req) => {
               },
               {
                 role: 'user',
-                content: `Write a simple, casual email to ${recipient.name || 'someone'}${recipient.company ? ` at ${recipient.company}` : ''}. ${prompt}\n\nKeep it short, friendly, and natural. No fancy formatting. Just write like a real person.`
+                content: `Write a simple, casual email to ${recipient.name || 'someone'}${recipient.company ? ` at ${recipient.company}` : ''}. ${prompt}\n\nKeep it short, friendly, and natural. No fancy formatting. Just write like a real person.\n\nEnd with:\nBest regards,\n${senderName}${senderCompany ? `\n${senderCompany}` : ''}`
               }
             ],
             temperature: 0.9,
