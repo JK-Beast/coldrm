@@ -8,6 +8,15 @@ const Index = () => {
 
   return (
     <div className="min-h-screen">
+      {/* Warning Banner */}
+      <div className="bg-yellow-500/10 border-b-2 border-yellow-500/30 backdrop-blur-sm">
+        <div className="container mx-auto px-4 py-3">
+          <p className="text-center text-sm md:text-base font-medium text-yellow-700 dark:text-yellow-400">
+            ⚠️ This is an MVP version and may contain bugs. Use for testing purposes only.
+          </p>
+        </div>
+      </div>
+
       {/* Hero Section */}
       <section className="relative overflow-hidden" style={{
         background: "var(--gradient-hero)",

@@ -93,7 +93,7 @@ const Auth = () => {
         
         toast({
           title: "Account created!",
-          description: "Please check your email and verify your account before logging in.",
+          description: "Please check your email to verify your account. You must verify before you can log in.",
         });
       }
     } catch (error: any) {
