@@ -17,6 +17,7 @@ const authSchema = z.object({
   password: z.string()
     .min(6, "Password must be at least 6 characters")
     .max(72, "Password must be less than 72 characters"),
+  confirmPassword: z.string().optional(),
   fullName: z.string()
     .trim()
     .min(1, "Name is required")
@@ -26,12 +27,22 @@ const authSchema = z.object({
     .trim()
     .max(200, "Company must be less than 200 characters")
     .optional(),
+}).refine((data) => {
+  if (data.confirmPassword !== undefined) {
+    return data.password === data.confirmPassword;
+  }
+  return true;
+}, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
 });
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [company, setCompany] = useState("");
   const [loading, setLoading] = useState(false);
@@ -46,6 +57,7 @@ const Auth = () => {
       authSchema.parse({
         email,
         password,
+        confirmPassword: !isLogin ? confirmPassword : undefined,
         fullName: !isLogin ? fullName : undefined,
         company: !isLogin ? company : undefined,
       });
@@ -93,9 +105,46 @@ const Auth = () => {
         
         toast({
           title: "Account created!",
-          description: "Please check your email to verify your account. You must verify before you can log in.",
+          description: "You can now log in to your account.",
         });
+        setIsLogin(true);
       }
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!email) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Please enter your email address",
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth`,
+      });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Check your email",
+        description: "We've sent you a password reset link.",
+      });
+      setIsForgotPassword(false);
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -114,17 +163,19 @@ const Auth = () => {
       <Card className="w-full max-w-md shadow-[var(--shadow-medium)]">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">
-            {isLogin ? "Welcome back" : "Create account"}
+            {isForgotPassword ? "Reset password" : isLogin ? "Welcome back" : "Create account"}
           </CardTitle>
           <CardDescription className="text-center">
-            {isLogin 
-              ? "Sign in to access your COLDrm dashboard" 
-              : "Start managing your contacts and campaigns"}
+            {isForgotPassword 
+              ? "Enter your email to receive a reset link"
+              : isLogin 
+                ? "Sign in to access your COLDrm dashboard" 
+                : "Start managing your contacts and campaigns"}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleAuth} className="space-y-4">
-            {!isLogin && (
+          <form onSubmit={isForgotPassword ? handleForgotPassword : handleAuth} className="space-y-4">
+            {!isLogin && !isForgotPassword && (
               <>
                 <div className="space-y-2">
                   <Label htmlFor="fullName">Full Name</Label>
@@ -173,38 +224,84 @@ const Auth = () => {
               </div>
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10"
-                  required
-                  minLength={6}
-                />
-              </div>
-            </div>
+            {!isForgotPassword && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="password"
+                      type="password"
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="pl-10"
+                      required
+                      minLength={6}
+                    />
+                  </div>
+                </div>
+
+                {!isLogin && (
+                  <div className="space-y-2">
+                    <Label htmlFor="confirmPassword">Confirm Password</Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="confirmPassword"
+                        type="password"
+                        placeholder="••••••••"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        className="pl-10"
+                        required
+                        minLength={6}
+                      />
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
 
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Loading..." : isLogin ? "Sign in" : "Create account"}
+              {loading ? "Loading..." : isForgotPassword ? "Send reset link" : isLogin ? "Sign in" : "Create account"}
             </Button>
           </form>
 
-          <div className="mt-4 text-center text-sm">
+          <div className="mt-4 text-center text-sm space-y-2">
+            {isLogin && !isForgotPassword && (
+              <button
+                type="button"
+                onClick={() => setIsForgotPassword(true)}
+                className="text-primary hover:underline block w-full"
+              >
+                Forgot password?
+              </button>
+            )}
+            
             <button
               type="button"
-              onClick={() => setIsLogin(!isLogin)}
-              className="text-primary hover:underline"
+              onClick={() => {
+                setIsLogin(!isLogin);
+                setIsForgotPassword(false);
+              }}
+              className="text-primary hover:underline block w-full"
             >
               {isLogin
                 ? "Don't have an account? Sign up"
                 : "Already have an account? Sign in"}
             </button>
+
+            {isForgotPassword && (
+              <button
+                type="button"
+                onClick={() => setIsForgotPassword(false)}
+                className="text-primary hover:underline block w-full"
+              >
+                Back to sign in
+              </button>
+            )}
           </div>
         </CardContent>
       </Card>
